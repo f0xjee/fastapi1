@@ -1,51 +1,40 @@
 import datetime
-from typing import Literal
-
+from typing import Literal, Optional
 from pydantic import BaseModel
-
 
 class SuccessResponse(BaseModel):
     status: Literal["success"]
 
-
 class IdResponse(BaseModel):
-   id: int 
-   
-   
-class CreateAdRequest(BaseModel): #параметры запросов
-    headers: str
-    req: str | None
-    price: int
+    id: int
+
+class CreateAdRequest(BaseModel):
+    title: str
+    description: Optional[str] = None
+    price: float
     author: str
-    start_time: datetime.datetime
-   
-   
-class CreateAdResponse(IdResponse): #параметры ответов
+
+class CreateAdResponse(IdResponse):
     pass
 
+class UpdateAdRequest(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
 
-class UpdateAdRequest(BaseModel): #обновление запроса
-    headers: str | None = None
-    req: str | None = None
-    price: int | None = None
-    
-    
-class UpdateAdResponse(SuccessResponse): #обновление ответов
+class UpdateAdResponse(SuccessResponse):
     pass
-
 
 class GetAdResponse(BaseModel):
     id: int
-    headers: str
-    req: str
-    price: int
+    title: str
+    description: str
+    price: float
     author: str
-    start_time: datetime.datetime
-    
-    
-class SearchAdRespone(BaseModel):
+    created_at: datetime.datetime
+
+class SearchAdResponse(BaseModel):
     results: list[GetAdResponse]
-    
-    
+
 class DeleteAdResponse(SuccessResponse):
     pass
