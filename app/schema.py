@@ -38,3 +38,22 @@ class SearchAdResponse(BaseModel):
 
 class DeleteAdResponse(SuccessResponse):
     pass
+
+class CreateUserRequest(BaseModel):
+    username: str
+    password: str
+    group: Optional[str] = "user"
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class GetUserResponse(BaseModel):
+    id: int
+    username: str
+    group: str
+

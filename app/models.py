@@ -34,9 +34,25 @@ class Ad(Base):
             "author": self.author,
             "created_at": self.created_at.isoformat(),
         }
+        
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String, unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String)
+    group: Mapped[str] = mapped_column(String, default="user")  # "user" или "admin"
 
-ORM_OBJ = Ad
-ORM_CLS = type[Ad]
+    @property
+    def dict(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "group": self.group,
+        }
+
+
+ORM_OBJ = Ad | User
+ORM_CLS = type[Ad] | type[User]
 
 async def init_orm():
     async with engine.begin() as conn:
