@@ -38,3 +38,4 @@ async def check_permissions(
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     if owner_id and current_user.id != owner_id:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
+    return True

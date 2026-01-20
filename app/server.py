@@ -6,7 +6,7 @@ import models
 from constants import SUCCESS_RESPONSE
 from schema import (CreateAdRequest, CreateAdResponse, DeleteAdResponse,
             GetAdResponse, IdResponse, SearchAdResponse, SuccessResponse, UpdateAdRequest,
-            UpdateAdResponse)
+            UpdateAdResponse, UserUpdateRequest)
 from lifespan import lifespan
 from app.dependency import SessionDependency
 from models import Session, User
@@ -23,7 +23,7 @@ app = FastAPI(
 )
 
 
-@app.post('/advertisement', response_model=CreateAdResponse)
+@app.post('/advertisement', response_model=CreateAdResponse, status_code=201)
 async def create_ad(ad: CreateAdRequest, session: SessionDependency):
     ad_dict = ad.model_dump(exclude_unset=True)
     ad_orm_obj = models.Ad(**ad_dict)
@@ -65,20 +65,31 @@ async def search_ad(
     return {"results": [ad.dict for ad in ads]}
 
 @app.patch('/advertisement/{advertisement_id}', response_model=UpdateAdResponse)
-async def update_ad(advertisement_id: int, ad_data: UpdateAdRequest, session: SessionDependency):
-    ad_dict = ad_data.model_dump(exclude_unset=True)
+async def update_ad(
+    advertisement_id: int,
+    ad_data: UpdateAdRequest,
+    session: SessionDependency,
+    current_user: User = Depends(get_current_user)
+):
     ad_orm_obj = await crud.get_item_by_id(session, models.Ad, advertisement_id)
-    
+    await check_permissions(current_user, owner_id=ad_orm_obj.owner_id)  # Проверка прав
+    ad_dict = ad_data.model_dump(exclude_unset=True)
     for field, value in ad_dict.items():
         setattr(ad_orm_obj, field, value)
     await crud.add_item(session, ad_orm_obj)
     return SUCCESS_RESPONSE
 
-@app.delete('/advertisement/{advertisement_id}', response_model=DeleteAdResponse)
-async def delete_ad(advertisement_id: int, session: SessionDependency):
+
+@app.delete('/advertisement/{advertisement_id}', status_code=204)
+async def delete_ad(
+    advertisement_id: int,
+    session: SessionDependency,
+    current_user: User = Depends(get_current_user)
+):
     ad_orm_obj = await crud.get_item_by_id(session, models.Ad, advertisement_id)
+    await check_permissions(current_user, owner_id=ad_orm_obj.owner_id)  # Проверка прав
     await crud.delete_item(session, ad_orm_obj)
-    return SUCCESS_RESPONSE
+
 
 
 @app.post('/login', response_model=TokenResponse)
@@ -91,7 +102,7 @@ async def login(login_data: LoginRequest, session: SessionDependency):
     access_token = create_access_token(data={"sub": str(user.id)})
     return {"access_token": access_token, "token_type": "bearer"}
 
-@app.post('/user', response_model=IdResponse)
+@app.post('/user', response_model=IdResponse, status_code=201)
 async def create_user(user_data: CreateUserRequest, session: SessionDependency):
     user_dict = user_data.model_dump()
     user_dict["password_hash"] = get_password_hash(user_dict.pop("password"))
@@ -108,7 +119,7 @@ async def get_user(user_id: int, session: SessionDependency):
 @app.patch('/user/{user_id}', response_model=SuccessResponse)
 async def update_user(
     user_id: int,
-    user_data: CreateUserRequest,
+    user_data: UserUpdateRequest, 
     session: SessionDependency,
     current_user: User = Depends(get_current_user)
 ):

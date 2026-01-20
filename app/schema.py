@@ -12,7 +12,7 @@ class CreateAdRequest(BaseModel):
     title: str
     description: Optional[str] = None
     price: float
-    author: str
+    owner_id: int
 
 class CreateAdResponse(IdResponse):
     pass
@@ -30,7 +30,7 @@ class GetAdResponse(BaseModel):
     title: str
     description: str
     price: float
-    author: str
+    owner_id: int
     created_at: datetime.datetime
 
 class SearchAdResponse(BaseModel):
@@ -56,4 +56,9 @@ class GetUserResponse(BaseModel):
     id: int
     username: str
     group: str
+
+class UserUpdateRequest(BaseModel):
+    username: Optional[str] = None
+    password: Optional[str] = None
+    group: Optional[str] = None
 
